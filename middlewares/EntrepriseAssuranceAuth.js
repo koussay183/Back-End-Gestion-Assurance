@@ -22,13 +22,16 @@ const EntrepriseAssuranceAuthVerify = async (req, res, next) => {
     }
 
     // If JWT is valid and signed with role "superEntrepriseAssurance", proceed to the next middleware
+    req.id = decoded.id
     next();
   } catch (error) {
     // Check if token has expired
     if (error.name === 'TokenExpiredError') {
       // If expired, generate a new token and set it in a cookie
+      const decoded = jwt.verify(token, process.env.SECRET_KEY);
       const newToken = generateToken(decoded.id, decoded.role);
       res.cookie('token', newToken, { httpOnly: true, maxAge: 3600000 }); // Expires in 1 hour
+      req.id = decoded.id
       next(); // Continue to next middleware
     } else {
       // If other error, return unauthorized
