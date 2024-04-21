@@ -7,7 +7,7 @@ const Contrat = require("../modules/ContratSchema");
 const BoutiqueAuth = require("../middlewares/BoutiqueAuth");
 const Category = require("../modules/CategorySchema");
 const Product = require("../modules/ProductSchema");
-
+const Employee =require("../modules/EmployeeSchema")
 
 // here boutique can do a signup with unique email 
 router.post('/signup',async(req, res) => {
@@ -111,5 +111,24 @@ router.get('/categories/:boutiqueId', async (req, res) => {
     res.status(400).json(error);
   }
 });
+
+
+// here the boutique when authed and have an jwt can create an employee and give him an acessLevel
+router.post('/add-employee',BoutiqueAuth, async (req, res) => {
+  try {
+    // Create a new employee instance using the Employee model
+    const newEmployee = new Employee({...req.body,boutiqueId:req.boutiqueId,worksFor : "boutique"});
+
+    // Save the employee to the database
+    const savedEmployee = await newEmployee.save();
+
+    // If the employee is saved successfully, send a success response
+    res.status(201).json(savedEmployee);
+  } catch (err) {
+    // If an error occurs, send an error response
+    res.status(400).json({ message: err.message });
+  }
+});
+
 
 module.exports = router;

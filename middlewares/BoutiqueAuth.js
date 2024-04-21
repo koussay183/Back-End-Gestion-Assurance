@@ -17,7 +17,7 @@ const BoutiqueAuthVerify = async (req, res, next) => {
 
     const Boutique = await BoutiqueS.findById(decoded.id);
 
-    if (!Boutique || decoded.role !== "boutique") {
+    if (!Boutique || decoded.role !== "boutique" || decoded.role !== "employee") {
       return res.status(403).send('Access denied. Not a Boutique.');
     }
 

@@ -2,9 +2,12 @@ require('dotenv').config(); // Load environment variables
 const express = require('express');
 const router = express.Router();
 const EntrepriseAssurance = require("../modules/EntrepriseAssuranceSchema");
+const EntrepriseReparation = require("../modules/EntrepriseReparationSchema");
 const Auth = require("../middlewares/EntrepriseAssuranceAuth");
-
+const Employee =require("../modules/EmployeeSchema")
 const jwt = require("jsonwebtoken");
+const Contrat = require("../modules/ContratSchema")
+const Reclamation = require('../modules/ReclamationSchema');
 
 // here entreprise can signup with unique name
 router.post('/signup',async(req, res) => {
@@ -129,5 +132,109 @@ router.put('/update/:id', Auth ,async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
+// here can add empolyee
+router.post('/add-employee',Auth, async (req, res) => {
+  try {
+    // Create a new employee instance using the Employee model
+    const newEmployee = new Employee({...req.body,entrepriseAssuranceId:req.id,worksFor : "entreprise-assurance"});
+
+    // Save the employee to the database
+    const savedEmployee = await newEmployee.save();
+
+    // If the employee is saved successfully, send a success response
+    res.status(201).json(savedEmployee);
+  } catch (err) {
+    // If an error occurs, send an error response
+    res.status(400).json({ message: err.message });
+  }
+});
+
+
+// Route to get all reclamations by EntrepriseAssurance ID
+router.get('/reclamations',Auth, async (req, res) => {
+  const entrepriseAssuranceId = req.id;
+
+  try {
+    // Find all contrats where EntrepriseReparationId matches the provided ID
+    const contrats = await Contrat.find({ EntrepriseReparationId: entrepriseAssuranceId });
+
+    // Extract the ContratIds from the found contrats
+    const contratIds = contrats.map(contrat => contrat._id);
+
+    // Find all reclamations where ContratId matches any of the found ContratIds
+    const reclamations = await Reclamation.find({ ContratId: { $in: contratIds } });
+
+    // If there are no reclamations found, send a 404 error response
+    if (!reclamations || reclamations.length === 0) {
+      return res.status(404).json({ message: 'No reclamations found for the provided Entreprise Assurance ID' });
+    }
+
+    // If reclamations are found, send them in the response
+    res.json(reclamations);
+  } catch (err) {
+    // If an error occurs, send an error response
+    res.status(500).json({ message: err?.message });
+  }
+});
+
+// Route to handle updating a reclamation based on action (rejeter, rembourser, or reparer)
+router.put('/reclamation/:reclamationId/update', Auth ,async (req, res) => {
+  const { reclamationId } = req.params;
+  const { action } = req.body;
+
+  try {
+    // Find the reclamation by ID
+    const reclamation = await Reclamation.findById(reclamationId);
+
+    if (!reclamation) {
+      return res.status(404).json({ message: 'Reclamation not found' });
+    }
+
+    // Handle the different actions
+    switch (action) {
+      case 'rejeter':
+        // Set state to "rejeter" and pending to false
+        reclamation.state = 'rejeter';
+        reclamation.pending = false;
+        break;
+      case 'rembourser':
+        // Set state to "rembourser", set remboursable from req.body, and pending to false
+        reclamation.state = 'rembourser';
+        reclamation.remboursable = req.body.remboursable;
+        reclamation.pending = false;
+        break;
+      case 'reparer':
+        // Find all entrepriseReparation and calculate the one with the least reclamations
+        const entreprises = await EntrepriseReparation.find({});
+        let minReclamations = Infinity;
+        let selectedEntrepriseId = null;
+
+        for (const entreprise of entreprises) {
+          const reclamationsCount = await Reclamation.countDocuments({ EntrepriseReparationId: entreprise._id });
+          if (reclamationsCount < minReclamations) {
+            minReclamations = reclamationsCount;
+            selectedEntrepriseId = entreprise._id;
+          }
+        }
+
+        // Set EntrepriseReparationId to the selectedEntrepriseId without setting pending to false
+        reclamation.EntrepriseReparationId = selectedEntrepriseId;
+        break;
+      default:
+        return res.status(400).json({ message: 'Invalid action' });
+    }
+
+    // Save the updated reclamation
+    await reclamation.save();
+
+    // Respond with the updated reclamation
+    res.json(reclamation);
+  } catch (err) {
+    // Handle errors
+    res.status(500).json({ message: err?.message });
+  }
+});
+
 
 module.exports = router;

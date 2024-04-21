@@ -1,4 +1,4 @@
-require('dotenv').config(); // Load environment variables
+require('dotenv').config(); // Load Environment Variables
 const express = require('express');
 const router = express.Router();
 const User = require("../modules/UserSchema");
@@ -7,6 +7,7 @@ const Contrat = require("../modules/ContratSchema");
 const UserAuth = require("../middlewares/UserAuth");
 const Boutique = require("../modules/BoutiqueSchema");
 const Product = require("../modules/ProductSchema");
+const Reclamation = require("../modules/ReclamationSchema");
 
 // user can signup with unique email
 router.post('/signup',async(req, res) => {
@@ -139,6 +140,7 @@ router.post('/buy-product', UserAuth , async (req, res) => {
   }
 });
 
+
 // here user can see all of his contracts
 router.get('/contracts/:userId', UserAuth ,async (req, res) => {
   try {
@@ -154,5 +156,17 @@ router.get('/contracts/:userId', UserAuth ,async (req, res) => {
     res.status(500).json({ error: 'Server Error' });
   }
 });
+
+// here user can create reclamation assosiated to an contrat
+router.post("/create-reclamation/:idContrat",UserAuth,async (req,res)=>{
+  try {
+    const { idContrat } = req.params;
+    const r = new Reclamation({userId : req.userId , ContratId : idContrat , desc : req.body?.desc ,vol : req.body?.vol})
+    await r.save();
+    res.status(200).json(r)
+  } catch (error) {
+    res.status(400).json(error);
+  }
+})
 
 module.exports = router;

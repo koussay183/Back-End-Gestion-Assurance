@@ -1,11 +1,11 @@
 const jwt = require('jsonwebtoken');
-const EntrepriseAssuranceS = require('../modules/EntrepriseAssuranceSchema');
+const EntrepriseReparationS = require('../modules/EntrepriseReparationSchema');
 
 const generateToken = (id ,role) => {
   return jwt.sign({ id , role}, process.env.SECRET_KEY , { expiresIn: '1h' });
 };
 
-const EntrepriseAssuranceAuthVerify = async (req, res, next) => {
+const EntrepriseReparationAuthVerify = async (req, res, next) => {
   const token = req.cookies.token;
 
   try {
@@ -15,13 +15,13 @@ const EntrepriseAssuranceAuthVerify = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.SECRET_KEY);
 
-    const EntrepriseAssurance = await EntrepriseAssuranceS.findById(decoded.id);
+    const EntrepriseReparation = await EntrepriseReparationS.findById(decoded.id);
 
-    if (!EntrepriseAssurance || decoded.role !== "EntrepriseAssurance" || decoded.role !== "employee") {
-      return res.status(403).send('Access denied. Not a EntrepriseAssurance.');
+    if (!EntrepriseReparation || decoded.role !== "entrepriseReparation" || decoded.role !== "employee") {
+      return res.status(403).send('Access denied. Not a EntrepriseReparation.');
     }
 
-    // If JWT is valid and signed with role "superEntrepriseAssurance", proceed to the next middleware
+    // If JWT is valid and signed with role "superEntrepriseReparation", proceed to the next middleware
     req.id = decoded.id
     next();
   } catch (error) {
@@ -40,4 +40,4 @@ const EntrepriseAssuranceAuthVerify = async (req, res, next) => {
   }
 };
 
-module.exports = EntrepriseAssuranceAuthVerify;
+module.exports = EntrepriseReparationAuthVerify;
