@@ -3,9 +3,10 @@ const app = express()
 const cors = require("cors")
 const port = 3000
 const mongoose = require("mongoose");
-
+var cookies = require("cookie-parser");
 // Middlewares
 app.use(cors());
+app.use(cookies())
 app.use(express.json());
 
 // Importing Routes Handlers

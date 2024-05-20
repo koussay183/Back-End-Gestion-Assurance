@@ -57,7 +57,7 @@ router.post('/create-category',BoutiqueAuth,async(req, res) => {
     if (existingCategory) {
       return res.status(400).json({ message: "A category with the same name already exists for this boutique." });
     }
-    const c = new Category(req.body);
+    const c = new Category({...req.body , BoutiqueId : req.boutiqueId});
     await c.save();
     res.status(201).json(c);
   } catch (error) {
@@ -69,7 +69,7 @@ router.post('/create-category',BoutiqueAuth,async(req, res) => {
 // here boutique can create a product
 router.post('/add-product',BoutiqueAuth,async(req, res) => {
   try {
-    const p = new Product(req.body);
+    const p = new Product({...req.body ,BoutiqueId : req.boutiqueId });
     await p.save();
     res.status(201).json(p);
   } catch (error) {

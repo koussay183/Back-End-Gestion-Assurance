@@ -6,9 +6,10 @@ const generateToken = (id ,role) => {
 };
 
 const BoutiqueAuthVerify = async (req, res, next) => {
-  const token = req.cookies.token;
-
+  
+  const token = req.cookies?.token;
   try {
+    
     if (!token) {
       return res.status(401).send('Access denied. No token provided.');
     }
@@ -16,8 +17,8 @@ const BoutiqueAuthVerify = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.SECRET_KEY);
 
     const Boutique = await BoutiqueS.findById(decoded.id);
-
-    if (!Boutique || decoded.role !== "boutique" || decoded.role !== "employee") {
+    
+    if ( !Boutique || ( decoded.role !== "boutique" && decoded.role !== "employee" )) {
       return res.status(403).send('Access denied. Not a Boutique.');
     }
 

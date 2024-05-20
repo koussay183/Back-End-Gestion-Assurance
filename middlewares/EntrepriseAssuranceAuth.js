@@ -17,7 +17,7 @@ const EntrepriseAssuranceAuthVerify = async (req, res, next) => {
 
     const EntrepriseAssurance = await EntrepriseAssuranceS.findById(decoded.id);
 
-    if (!EntrepriseAssurance || decoded.role !== "EntrepriseAssurance" || decoded.role !== "employee") {
+    if (!EntrepriseAssurance || (decoded.role !== "EntrepriseAssurance" && decoded.role !== "employee")) {
       return res.status(403).send('Access denied. Not a EntrepriseAssurance.');
     }
 

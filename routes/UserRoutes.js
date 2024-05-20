@@ -57,7 +57,7 @@ router.get('/get-boutiques', async (req, res) => {
     const skip = (page - 1) * limit;
 
     // Query to fetch boutiques with pagination
-    const boutiques = await Boutique.find({})
+    const boutiques = await Boutique.find({}).select("-password")
       .skip(skip)
       .limit(limit)
       .exec();
